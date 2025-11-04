@@ -1,4 +1,5 @@
 import { sendEmail } from "../utils/sendEmail.js";
+import FingerprintAudit from "../models/FingerprintAudit.js";
 
 export const notifyFingerprintAssignment = async (req, res) => {
   const { employeeName, employeeEmail, assignedBy, employeeId, sendTo } =
@@ -8,55 +9,81 @@ export const notifyFingerprintAssignment = async (req, res) => {
     return res.status(400).json({ message: "Missing required fields" });
   }
 
-  if (!sendTo) {
-    return res.status(400).json({ message: "Missing email target option" });
-  }
+  const emailsSent = [];
 
   try {
-    const sent = [];
-
-    // Email to Employee
+    // Send to Employee
     if (sendTo === "employee" || sendTo === "both") {
-      const employeeSubject = "Fingerprint Attendance System Assignment";
-      const employeeHtml = `
+      const subject = "Fingerprint Attendance System Assignment";
+      const html = `
         <p>Hello ${employeeName},</p>
-        <p>You have been assigned to the fingerprint attendance system by ${assignedBy}.</p>
+        <p>You have been assigned to the fingerprint attendance system by <strong>${assignedBy}</strong>.</p>
         <p>Please acknowledge this assignment.</p>
-        <p>Thank you.</p>
+        <p>Thank you,<br/>IT Department</p>
       `;
-
-      await sendEmail({
-        to: employeeEmail,
-        cc: process.env.ADMIN_EMAIL,
-        subject: employeeSubject,
-        html: employeeHtml,
-      });
-      sent.push("employee");
+      try {
+        await sendEmail({
+          to: employeeEmail,
+          cc: process.env.ADMIN_EMAIL,
+          subject,
+          html,
+        });
+        emailsSent.push({ to: employeeEmail, subject, status: "success" });
+      } catch (err) {
+        emailsSent.push({
+          to: employeeEmail,
+          subject,
+          status: "failed",
+          error: err.message,
+        });
+      }
     }
 
-    // Email to HR Team
+    // Send to HR
     if (sendTo === "hr" || sendTo === "both") {
-      const hrSubject = "New Employee Enrollment in Attendance System";
-      const hrHtml = `
+      const subject = "New Employee Enrollment in Attendance System";
+      const html = `
         <p>Dear HR Team,</p>
-        <p>As requested by HR, I have enrolled User ${employeeId} – ${employeeName} into the attendance fingerprint system.</p>
-        <p>Please let me know if any further action is required.</p>
-        <p>Best regards,<br>${assignedBy}</p>
+        <p>As requested, <strong>${employeeName}</strong> (Employee ID: ${employeeId}) has been enrolled into the fingerprint attendance system by ${assignedBy}.</p>
+        <p>Best regards,<br/>${assignedBy}</p>
       `;
-
-      await sendEmail({
-        to: process.env.HR_EMAIL,
-        subject: hrSubject,
-        html: hrHtml,
-      });
-      sent.push("hr");
+      try {
+        await sendEmail({
+          to: process.env.HR_EMAIL,
+          subject,
+          html,
+        });
+        emailsSent.push({
+          to: process.env.HR_EMAIL,
+          subject,
+          status: "success",
+        });
+      } catch (err) {
+        emailsSent.push({
+          to: process.env.HR_EMAIL,
+          subject,
+          status: "failed",
+          error: err.message,
+        });
+      }
     }
+
+    // Save audit record
+    await FingerprintAudit.create({
+      employeeId,
+      employeeName,
+      employeeEmail,
+      assignedBy,
+      sendTo,
+      emailsSent,
+    });
 
     res.status(200).json({
-      message: `Email(s) sent successfully to: ${sent.join(", ")}`,
+      message: "Fingerprint assignment processed successfully",
+      summary: emailsSent,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Failed to send emails" });
+    res.status(500).json({ message: "Failed to process assignment" });
   }
 };

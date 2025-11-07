@@ -69,6 +69,38 @@ export const getAssets = async (req, res) => {
   }
 };
 
+// ✅ Public asset view (no auth required)
+export const getPublicAssetById = async (req, res) => {
+  try {
+    const asset = await Asset.findById(req.params.id).populate(
+      "assignedTo",
+      "name email department"
+    );
+
+    if (!asset) {
+      return res.status(404).json({ message: "Asset not found" });
+    }
+
+    res.json({
+      assetTag: asset.assetTag,
+      name: asset.name,
+      category: asset.category,
+      brand: asset.brand,
+      model: asset.model,
+      serialNumber: asset.serialNumber,
+      purchaseDate: asset.purchaseDate,
+      warrantyExpiry: asset.warrantyExpiry,
+      location: asset.location,
+      status: asset.status,
+      assignedTo: asset.assignedTo,
+      remarks: asset.remarks,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: err.message });
+  }
+};
+
 // Get asset by ID
 export const getAssetById = async (req, res) => {
   try {

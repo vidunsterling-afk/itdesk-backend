@@ -20,6 +20,7 @@ import monthRoutes from "./routes/monthRoutes.js";
 import tagRoutes from "./routes/tagRoutes.js";
 import m365Routes from "./routes/m365.routes.js";
 import attendanceEmailRoutes from "./routes/attendanceEmailRoutes.js";
+import reportDataRoutes from "./routes/reportDataRoutes.js";
 
 dotenv.config();
 connectDB();
@@ -71,6 +72,7 @@ app.use("/uploads/gatepass", express.static(uploadDir));
 app.use("/api/tags", tagRoutes);
 app.use("/api/m365", m365Routes);
 app.use("/api/attendance", attendanceEmailRoutes);
+app.use("/api/reports", reportDataRoutes);
 
 // Health Check
 app.get("/api/health", (req, res) => {

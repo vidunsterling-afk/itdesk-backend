@@ -81,6 +81,16 @@ app.get("/api/health", (req, res) => {
   res.status(200).json({ status: "ok", message: "Backend is running.." });
 });
 
+// Ping Check
+app.get("/api/ping", (req, res) => {
+  const start = Date.now();
+  res.json({
+    message: "pong",
+    timestamp: Date.now(),
+    latency: Date.now() - start,
+  });
+});
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server is running on port: ${PORT}`);

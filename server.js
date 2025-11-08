@@ -9,6 +9,7 @@ import { updateM365Usage } from "./services/m365Usage.service.js";
 
 // Routes
 import authRoutes from "./routes/authRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
 import employeeRoutes from "./routes/employeeRoutes.js";
 import assetRoutes from "./routes/assetRoutes.js";
 import maintenanceRoutes from "./routes/maintenanceRoutes.js";
@@ -60,6 +61,7 @@ cron.schedule("0 3 * * *", async () => {
 
 // Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
 app.use("/api/employees", employeeRoutes);
 app.use("/api/assets", assetRoutes);
 app.use("/api/maintenance", maintenanceRoutes);
